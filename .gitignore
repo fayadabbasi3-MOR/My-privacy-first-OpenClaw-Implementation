@@ -1,0 +1,8 @@
+# Ignore everything
+*
+
+# Except the setup notes
+!raspberry-pi-setup-notes.md
+
+# And this gitignore file
+!.gitignore
