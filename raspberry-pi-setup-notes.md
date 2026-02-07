@@ -13,12 +13,14 @@ A comprehensive guide for setting up a private, sandboxed AI assistant using Ope
 5. [System Architecture](#system-architecture)
 6. [Security Analysis](#security-analysis)
 7. [Telegram Setup & Privacy](#telegram-setup--privacy)
-8. [Moonshot AI / Kimi K2.5 Registration](#moonshot-ai--kimi-k25-registration)
-9. [Payment Privacy Options](#payment-privacy-options)
-10. [Complete Privacy Stack](#complete-privacy-stack)
-11. [Phased Rollout Plan](#phased-rollout-plan)
+8. [Slack as Alternative Communication Channel](#slack-as-alternative-communication-channel)
+9. [Migration Path: Telegram → Slack](#migration-path-telegram--slack)
+10. [Moonshot AI / Kimi K2.5 Registration](#moonshot-ai--kimi-k25-registration)
+11. [Payment Privacy Options](#payment-privacy-options)
+12. [Complete Privacy Stack](#complete-privacy-stack)
+13. [Phased Rollout Plan](#phased-rollout-plan)
 
-**Key Insight:** All OpenClaw accounts (Gmail, Calendar, Docs) are accessed exclusively from the Raspberry Pi. iPhone only has Telegram for messaging. Mac/personal devices stay completely clean.
+**Key Insight:** All OpenClaw accounts (Gmail, Calendar, Docs) are accessed exclusively from the Raspberry Pi. iPhone only has Telegram/Slack for messaging. Mac/personal devices stay completely clean.
 
 ---
 
@@ -347,6 +349,171 @@ Bots can only see your phone number if:
 | Secondary eSIM | Real number, no extra device | Costs money, links to payment |
 
 **Recommendation:** Prepaid burner SIM if maximum privacy is needed; otherwise your real number is not exposed to OpenClaw.
+
+---
+
+## Slack as Alternative Communication Channel
+
+### Why Consider Slack?
+
+| Feature | Telegram | Slack |
+|---------|----------|-------|
+| Organization | Single chat thread | Channels for topics |
+| Message history (free) | Unlimited | 90 days |
+| Threads | Limited | Full support |
+| Search | Basic | Powerful |
+| Skills per channel | Need multiple bots | Natural fit |
+| Phone required | Yes | No (email only) |
+| App weight | Lightweight | Heavier |
+
+### Slack Pricing
+
+| Plan | Cost | Message History |
+|------|------|-----------------|
+| Free | $0 | 90 days |
+| Pro | $7.25-8.75/user/month | Unlimited |
+| Business+ | $15-18/user/month | Unlimited |
+
+For single user: **~$87-105/year** for Pro with unlimited history.
+
+### Suggested Channel Structure
+
+```
+OpenClaw Workspace
+├── #general          → Casual chat, quick questions
+├── #research         → Web searches, article summaries
+├── #reminders        → Daily reminders, to-dos
+├── #calendar         → Schedule management
+├── #writing          → Drafts, editing help
+└── #system           → OpenClaw status, logs
+```
+
+### Slack Privacy & Isolation
+
+**Slack workspaces are completely isolated:**
+
+| Boundary | Safe? | Explanation |
+|----------|-------|-------------|
+| Other Slack workspaces | ✓ Yes | Bot tokens are workspace-specific |
+| Phone data | ✓ Yes | Slack app is iOS sandboxed |
+| Other apps on phone | ✓ Yes | Cannot access anything outside Slack |
+| Your work Slack | ✓ Yes | Separate workspace = separate everything |
+
+Your OpenClaw Slack workspace cannot see or interact with any other Slack workspace you're logged into.
+
+### Slack Payment Options
+
+| Method | Works? |
+|--------|--------|
+| Credit card | ✓ Yes |
+| Debit card | ✓ Yes |
+| ACH bank transfer (US) | ✓ Yes |
+| Prepaid Visa gift card | ⚠️ May work (try it) |
+| Privacy.com | ⚠️ Likely works (subscription-friendly) |
+
+---
+
+## Migration Path: Telegram → Slack
+
+### Architecture Concept
+
+**Skills and memory live in OpenClaw, not in the communication channel.**
+
+```
+                         RASPBERRY PI
+            ┌────────────────────────────────────┐
+            │         OPENCLAW CORE              │
+            │                                    │
+            │   ┌────────────────────────────┐   │
+            │   │    Skills & Memory         │   │
+            │   │  ├── research.skill        │   │
+            │   │  ├── calendar.skill        │   │
+            │   │  ├── reminders.skill       │   │
+            │   │  └── memory.db             │   │
+            │   └────────────┬───────────────┘   │
+            │                │                   │
+            │                ▼                   │
+            │   ┌────────────────────────────┐   │
+            │   │   Communication Layer      │   │
+            │   │  ┌────────┐  ┌──────────┐  │   │
+            │   │  │Telegram│  │  Slack   │  │   │
+            │   │  │  Bot   │  │   Bot    │  │   │
+            │   │  └───┬────┘  └────┬─────┘  │   │
+            │   └──────┼───────────┼────────┘   │
+            └──────────┼───────────┼────────────┘
+                       │           │
+                       ▼           ▼
+                   Telegram     Slack
+                    (you)       (you)
+```
+
+**Communication channels are just interfaces to the same brain.**
+
+### Migration Phases
+
+#### Phase 1: Parallel Setup (Week 1-2)
+
+Both channels active simultaneously:
+
+- [ ] Create Slack workspace with OpenClaw Gmail
+- [ ] Create Slack app/bot in Slack API dashboard
+- [ ] Add Slack credentials to OpenClaw config
+- [ ] Test basic queries in Slack
+- [ ] Verify same skills respond correctly
+- [ ] Telegram remains your primary interface
+
+#### Phase 2: Channel Configuration (Week 2-3)
+
+Set up Slack channel structure:
+
+- [ ] Create channels (#research, #reminders, #calendar, etc.)
+- [ ] Configure channel-to-skill mappings (if supported)
+- [ ] Test each channel with appropriate queries
+- [ ] Verify memory is shared across channels
+
+#### Phase 3: Gradual Shift (Week 3-4)
+
+Transition primary use:
+
+- [ ] Use Slack for structured work sessions
+- [ ] Use Telegram for quick mobile queries
+- [ ] Monitor both for consistency
+- [ ] Compare response quality
+
+#### Phase 4: Final Decision (Week 5+)
+
+Choose your configuration:
+
+| Option | Use Case |
+|--------|----------|
+| **Keep both** | Telegram for mobile, Slack for desktop |
+| **Slack only** | Full channel organization, disable Telegram |
+| **Telegram only** | If Slack doesn't fit your workflow |
+
+### Skills File Location
+
+Skills are stored centrally, not per-channel:
+
+```
+/home/pi/openclaw/
+├── config/
+│   ├── openclaw.yaml          # Main config
+│   └── credentials.yaml       # API keys
+│
+├── skills/
+│   ├── research.skill
+│   ├── calendar.skill
+│   └── reminders.skill
+│
+├── memory/
+│   └── memory.db              # Persistent memory (shared)
+│
+└── integrations/
+    ├── telegram.yaml          # Telegram bot config
+    └── slack.yaml             # Slack bot config (add this)
+```
+
+**Adding Slack doesn't affect your skills** — you just add a new integration config.
 
 ---
 
